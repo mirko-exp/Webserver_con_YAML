@@ -23,7 +23,6 @@ def valida_struttura_config(data):
         raise ValueError("La sezione 'routes' deve essere una lista.")
 
 def valida_e_imposta_default(data):
-    # Se il file YAML è vuoto, inizializza un dizionario vuoto per evitare errori
     if not data:
         data = {}
 
@@ -37,7 +36,7 @@ def valida_e_imposta_default(data):
     data.setdefault('static_dir', './public')
     data.setdefault('routes', [{'path': '/', 'file': 'index.html'}])
 
-    # Logging: definisce il nome del file di registro e il livello di dettaglio
+    # Logging: definisce il nome del file di registro e il livello
     data.setdefault('logging', {'file': 'server.log', 'level': 'INFO'})
 
     # Mappa delle estensioni file ai tipi MIME
@@ -61,19 +60,23 @@ def carica_configurazione():
             return valida_e_imposta_default(data)
 
     except FileNotFoundError:
+        # Il file di configurazione non esiste: si prosegue con i default
         print("ERRORE: file server_config.yaml non trovato. Uso configurazione di default.")
         return valida_e_imposta_default({})
 
     except yaml.YAMLError as e:
+        # Il file esiste ma contiene sintassi YAML non valida
         print(f"ERRORE: file YAML malformato: {e}. Uso configurazione di default.")
         return valida_e_imposta_default({})
 
     except Exception as e:
+        # Qualsiasi altro errore imprevisto durante il caricamento
         print(f"Errore imprevisto nel caricamento configurazione: {e}")
         return valida_e_imposta_default({})
 
 
 def invia_risposta_errore(codice, messaggio_log):
+    # Mappa i codici HTTP più comuni alla loro descrizione
     descrizioni = {
         404: "Not Found",
         500: "Internal Server Error",
@@ -82,6 +85,7 @@ def invia_risposta_errore(codice, messaggio_log):
 
     logging.error(messaggio_log)
 
+    # Recupera il nome del file HTML di errore dalla config, o usa il default "{codice}.html"
     nome_file_errore = CONFIG['error_pages'].get(codice, f"{codice}.html")
     percorso_errore = os.path.join(CONFIG['static_dir'], nome_file_errore)
 
@@ -89,9 +93,11 @@ def invia_risposta_errore(codice, messaggio_log):
         with open(percorso_errore, "rb") as f:
             corpo = f.read()
     except FileNotFoundError:
+        # La pagina di errore personalizzata non esiste: si genera una risposta HTML minimale
         logging.warning(f"Pagina errore non trovata: {percorso_errore}")
         corpo = f"<h1>{codice} {testo_stato}</h1><p>Risorsa non disponibile.</p>".encode()
 
+    # Costruisce l'header HTTP con codice di stato e content-type
     header = f"HTTP/1.1 {codice} {testo_stato}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n"
     return header.encode() + corpo
 
@@ -99,20 +105,20 @@ def invia_risposta_errore(codice, messaggio_log):
 def gestisci_client(socket_client, indirizzo):
     global CONFIG
     try:
-        # Riceve fino a 4096 byte di dati dalla connessione (la richiesta HTTP del browser)
+        # Riceve la richiesta HTTP del browser
         dati = socket_client.recv(4096).decode('utf-8')
         if not dati: return
 
-        # Estrae la prima riga della richiesta (es. "GET /index.html HTTP/1.1")
+        # Estrae la prima riga della richiesta
         riga_richiesta = dati.split("\r\n")[0]
         parti = riga_richiesta.split(" ")
         if len(parti) < 2: return
 
-        # Isola il metodo (GET/POST) e l'URL richiesto
+        # Isola il metodo e l'URL richiesto
         metodo, percorso = parti[0], parti[1]
         logging.info(f"Richiesta: {metodo} {percorso} da {indirizzo}")
 
-        # Funzionalità speciale: permette di ricaricare il file YAML senza spegnere il server
+        # Permette di ricaricare il file YAML senza spegnere il server
         if metodo == "GET" and percorso == "/reload-config":
             CONFIG = carica_configurazione()
             logging.info("Configurazione ricaricata con successo tramite richiesta web!")
@@ -132,11 +138,11 @@ def gestisci_client(socket_client, indirizzo):
                 # Se la rotta esiste, costruisce il percorso del file sul sistema
                 percorso_completo = os.path.join(CONFIG['static_dir'], nome_file)
                 try:
-                    # Identifica l'estensione e assegna il MIME type corretto (es. image/png)
+                    # Identifica l'estensione e assegna il MIME type corretto
                     ext = os.path.splitext(nome_file)[1]
                     tipo_mime = CONFIG['mime_types'].get(ext, 'application/octet-stream')
 
-                    # Legge il contenuto del file in modalità binaria (funziona per testo e immagini)
+                    # Legge il contenuto del file
                     with open(percorso_completo, "rb") as f:
                         contenuto = f.read()
 
@@ -162,7 +168,7 @@ def gestisci_client(socket_client, indirizzo):
         risposta = invia_risposta_errore(500, f"Errore interno: {e}")
         socket_client.sendall(risposta)
     finally:
-        # Chiude sempre la connessione per non lasciare socket appesi (memoria)
+        # Chiude sempre la connessione per non lasciare socket appese
         socket_client.close()
 
 
@@ -181,9 +187,9 @@ def avvia_server():
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-    # Crea un socket TCP/IP
+    # Crea una socket
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Permette il riavvio immediato sulla stessa porta ignorando il timeout del kernel
+    # Permette il riavvio immediato sulla stessa porta
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     try:
@@ -207,5 +213,4 @@ def avvia_server():
 
 
 if __name__ == "__main__":
-    # Esegue la funzione di avvio se lo script è lanciato direttamente
     avvia_server()
