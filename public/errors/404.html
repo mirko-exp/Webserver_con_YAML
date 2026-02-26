@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404 — Not Found</title>
+  <style>
+    :root {
+      --bg:    #050e18;
+      --cyan:  #00d4ff;
+      --red:   #ff3e5e;
+      --dim:   #5a2a35;
+      --text:  #cf8b9a;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #orbits { position: fixed; inset: 0; z-index: 0; }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .badge {
+      font-size: .65rem;
+      letter-spacing: .25em;
+      color: var(--dim);
+    }
+
+    h1 {
+      font-size: clamp(3rem, 14vw, 8rem);
+      font-weight: 400;
+      color: var(--red);
+      letter-spacing: .05em;
+      text-shadow: 0 0 30px #ff3e5e66;
+      animation: glitch 3s infinite, fadeIn 1s ease both;
+      line-height: 1;
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 3vw, 1.6rem);
+      color: var(--cyan);
+      letter-spacing: .15em;
+      text-shadow: 0 0 15px #00d4ff44;
+      animation: fadeIn 1s .2s ease both;
+    }
+
+    p {
+      font-size: .85rem;
+      color: var(--text);
+      opacity: .7;
+      letter-spacing: .06em;
+      max-width: 380px;
+      line-height: 1.8;
+      animation: fadeIn 1s .4s ease both;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .75rem;
+      letter-spacing: .2em;
+      color: var(--dim);
+      text-decoration: none;
+      border: 1px solid var(--dim);
+      padding: .5rem 1.2rem;
+      border-radius: 2px;
+      transition: color .3s, border-color .3s, background .3s;
+      animation: fadeIn 1s .6s ease both;
+    }
+
+    .back-link:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+      background: rgba(0,212,255,.06);
+    }
+
+    .ping {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 0 0 #ff3e5e88;
+      animation: ripple 1.4s ease-out infinite;
+    }
+
+    @keyframes ripple {
+      0%   { box-shadow: 0 0 0 0   #ff3e5e88; }
+      70%  { box-shadow: 0 0 0 18px #ff3e5e00; }
+      100% { box-shadow: 0 0 0 0   #ff3e5e00; }
+    }
+
+    @keyframes glitch {
+      0%, 90%, 100% { text-shadow: 0 0 30px #ff3e5e66; transform: none; }
+      92% { text-shadow: -3px 0 #00d4ff, 3px 0 #00ff9d; transform: skew(-1deg); }
+      94% { text-shadow: 3px 0 #00d4ff, -3px 0 #ff3e5e; transform: skew(1deg); }
+      96% { text-shadow: 0 0 30px #ff3e5e66; transform: none; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(16px); }
+      to   { opacity:1; transform: none; }
+    }
+
+    nav {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.5rem;
+      display: flex;
+      gap: 1.5rem;
+      z-index: 2;
+    }
+
+    nav a {
+      font-size: .65rem;
+      letter-spacing: .2em;
+      color: var(--dim);
+      text-decoration: none;
+      transition: color .3s;
+    }
+
+    nav a:hover { color: var(--cyan); }
+
+    footer {
+      position: fixed;
+      bottom: 1.2rem;
+      font-size: .65rem;
+      letter-spacing: .15em;
+      color: var(--dim);
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="orbits"></canvas>
+
+<nav>
+  <a href="index">HOME</a>
+  <a href="about">ABOUT</a>
+  <a href="contatti">CONTATTI</a>
+</nav>
+
+<div class="content">
+  <div class="ping"></div>
+  <span class="badge">// ERRORE — RISPOSTA HTTP</span>
+  <h1>404</h1>
+  <div class="subtitle">NOT FOUND</div>
+  <p>
+    Il server ha ricevuto la tua richiesta ma la risorsa
+    cercata non esiste su questo host TCP.
+  </p>
+  <a class="back-link" href="index">← TORNA ALL'HOME</a>
+</div>
+
+<footer id="clock">--:--:--</footer>
+
+<script>
+  (function tick() {
+    document.getElementById('clock').textContent =
+      new Date().toTimeString().slice(0, 8);
+    setTimeout(tick, 1000);
+  })();
+
+  const canvas = document.getElementById('orbits');
+  const ctx    = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const rings = [
+    { r: 120, speed: 0.8, nodes: 3, color: '#ff3e5e' },
+    { r: 200, speed: 0.5, nodes: 5, color: '#00d4ff' },
+    { r: 290, speed: 0.3, nodes: 7, color: '#ff3e5e' },
+    { r: 390, speed: 0.2, nodes: 4, color: '#00d4ff' },
+  ];
+
+  function draw(ts) {
+    const t  = ts * 0.001;
+    const ox = canvas.width  / 2;
+    const oy = canvas.height / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    rings.forEach(ring => {
+      ctx.beginPath();
+      ctx.arc(ox, oy, ring.r, 0, Math.PI * 2);
+      ctx.strokeStyle = ring.color + '18';
+      ctx.lineWidth   = 1;
+      ctx.stroke();
+
+      for (let i = 0; i < ring.nodes; i++) {
+        const angle = t * ring.speed + (i / ring.nodes) * Math.PI * 2;
+        const nx = ox + Math.cos(angle) * ring.r;
+        const ny = oy + Math.sin(angle) * ring.r;
+
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(nx, ny);
+        ctx.strokeStyle = ring.color + '14';
+        ctx.lineWidth   = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, 3, 0, Math.PI * 2);
+        ctx.fillStyle   = ring.color;
+        ctx.shadowColor = ring.color;
+        ctx.shadowBlur  = 12;
+        ctx.fill();
+        ctx.shadowBlur  = 0;
+      }
+    });
+
+    const pulse = 0.5 + 0.5 * Math.sin(t * 2);
+    ctx.beginPath();
+    ctx.arc(ox, oy, 6 + pulse * 3, 0, Math.PI * 2);
+    ctx.fillStyle   = '#ff3e5e';
+    ctx.shadowColor = '#ff3e5e';
+    ctx.shadowBlur  = 20 + pulse * 20;
+    ctx.fill();
+    ctx.shadowBlur  = 0;
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>

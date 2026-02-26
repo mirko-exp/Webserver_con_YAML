@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — Python TCP Server</title>
+  <style>
+    :root {
+      --bg:    #050e18;
+      --cyan:  #00d4ff;
+      --green: #00ff9d;
+      --dim:   #2a5a70;
+      --text:  #8bbfcf;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #orbits { position: fixed; inset: 0; z-index: 0; }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      max-width: 560px;
+      padding: 0 1.5rem;
+    }
+
+    .badge {
+      font-size: .65rem;
+      letter-spacing: .25em;
+      color: var(--dim);
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 5vw, 3rem);
+      font-weight: 400;
+      color: var(--cyan);
+      letter-spacing: .1em;
+      text-shadow: 0 0 20px #00d4ff66;
+      animation: fadeIn 1s ease both;
+    }
+
+    h1 span { color: var(--green); text-shadow: 0 0 20px #00ff9d66; }
+
+    p {
+      font-size: .85rem;
+      color: var(--text);
+      opacity: .7;
+      letter-spacing: .06em;
+      max-width: 420px;
+      line-height: 1.8;
+      animation: fadeIn 1s .4s ease both;
+    }
+
+    .specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .6rem;
+      width: 100%;
+      max-width: 420px;
+      animation: fadeIn 1s .6s ease both;
+    }
+
+    .spec-card {
+      border: 1px solid var(--dim);
+      padding: .8rem 1rem;
+      background: rgba(0,212,255,.03);
+      text-align: left;
+      border-radius: 2px;
+      transition: border-color .3s;
+    }
+
+    .spec-card:hover { border-color: var(--green); }
+
+    .spec-key {
+      font-size: .6rem;
+      letter-spacing: .2em;
+      color: var(--dim);
+      margin-bottom: .3rem;
+    }
+
+    .spec-val {
+      font-size: .85rem;
+      color: var(--green);
+      text-shadow: 0 0 8px #00ff9d44;
+    }
+
+    .ping {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0 #00ff9d88;
+      animation: ripple 1.8s ease-out infinite;
+    }
+
+    @keyframes ripple {
+      0%   { box-shadow: 0 0 0 0   #00ff9d88; }
+      70%  { box-shadow: 0 0 0 18px #00ff9d00; }
+      100% { box-shadow: 0 0 0 0   #00ff9d00; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform: translateY(16px); }
+      to   { opacity:1; transform: none; }
+    }
+
+    nav {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.5rem;
+      display: flex;
+      gap: 1.5rem;
+      z-index: 2;
+    }
+
+    nav a {
+      font-size: .65rem;
+      letter-spacing: .2em;
+      color: var(--dim);
+      text-decoration: none;
+      transition: color .3s;
+    }
+
+    nav a:hover, nav a.active { color: var(--cyan); }
+
+    footer {
+      position: fixed;
+      bottom: 1.2rem;
+      font-size: .65rem;
+      letter-spacing: .15em;
+      color: var(--dim);
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="orbits"></canvas>
+
+<nav>
+  <a href="index">HOME</a>
+  <a href="about" class="active">ABOUT</a>
+  <a href="contatti">CONTATTI</a>
+</nav>
+
+<div class="content">
+  <div class="ping"></div>
+  <span class="badge">// SISTEMA — SPECIFICHE TECNICHE</span>
+  <h1>A<span>BOUT</span></h1>
+  <p>
+    Un server TCP grezzo scritto in Python puro. Nessun framework,
+    nessuna dipendenza esterna. Solo socket, byte e protocollo HTTP a mano.
+  </p>
+  <div class="specs">
+    <div class="spec-card">
+      <div class="spec-key">LINGUAGGIO</div>
+      <div class="spec-val">Python 3.x</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-key">PROTOCOLLO</div>
+      <div class="spec-val">TCP / HTTP 1.1</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-key">DIPENDENZE</div>
+      <div class="spec-val">socket, sys</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-key">PORTA DEFAULT</div>
+      <div class="spec-val">8080</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-key">TIPO</div>
+      <div class="spec-val">Raw Socket</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-key">SCOPO</div>
+      <div class="spec-val">Esercitazione</div>
+    </div>
+  </div>
+</div>
+
+<footer id="clock">--:--:--</footer>
+
+<script>
+  (function tick() {
+    document.getElementById('clock').textContent =
+      new Date().toTimeString().slice(0, 8);
+    setTimeout(tick, 1000);
+  })();
+
+  const canvas = document.getElementById('orbits');
+  const ctx    = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const rings = [
+    { r: 120, speed: 0.8, nodes: 3, color: '#00d4ff' },
+    { r: 200, speed: 0.5, nodes: 5, color: '#00ff9d' },
+    { r: 290, speed: 0.3, nodes: 7, color: '#00d4ff' },
+    { r: 390, speed: 0.2, nodes: 4, color: '#00ff9d' },
+  ];
+
+  function draw(ts) {
+    const t  = ts * 0.001;
+    const ox = canvas.width  / 2;
+    const oy = canvas.height / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    rings.forEach(ring => {
+      ctx.beginPath();
+      ctx.arc(ox, oy, ring.r, 0, Math.PI * 2);
+      ctx.strokeStyle = ring.color + '18';
+      ctx.lineWidth   = 1;
+      ctx.stroke();
+
+      for (let i = 0; i < ring.nodes; i++) {
+        const angle = t * ring.speed + (i / ring.nodes) * Math.PI * 2;
+        const nx = ox + Math.cos(angle) * ring.r;
+        const ny = oy + Math.sin(angle) * ring.r;
+
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(nx, ny);
+        ctx.strokeStyle = ring.color + '14';
+        ctx.lineWidth   = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, 3, 0, Math.PI * 2);
+        ctx.fillStyle   = ring.color;
+        ctx.shadowColor = ring.color;
+        ctx.shadowBlur  = 12;
+        ctx.fill();
+        ctx.shadowBlur  = 0;
+      }
+    });
+
+    const pulse = 0.5 + 0.5 * Math.sin(t * 2);
+    ctx.beginPath();
+    ctx.arc(ox, oy, 6 + pulse * 3, 0, Math.PI * 2);
+    ctx.fillStyle   = '#00d4ff';
+    ctx.shadowColor = '#00d4ff';
+    ctx.shadowBlur  = 20 + pulse * 20;
+    ctx.fill();
+    ctx.shadowBlur  = 0;
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# ============================================
+# Configurazione Web Server Python
+# Non modificare questo file (fornito dal docente)
+# ============================================
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  max_connections: 5
+
+logging:
+  level: "INFO"          # DEBUG, INFO, WARNING, ERROR
+  file: "server.log"
+
+static_dir: "./public"
+
+routes:
+  - path: "/"
+    file: "index.html"
+  - path: "/about"
+    file: "about.html"
+  - path: "/contatti"
+    file: "contatti.html"
+
+mime_types:
+  ".html": "text/html"
+  ".css": "text/css"
+  ".js": "application/javascript"
+  ".png": "image/png"
+  ".jpg": "image/jpeg"
+  ".ico": "image/x-icon"
+
+error_pages:
+  404: "errors/404.html"
+  500: "errors/500.html"
